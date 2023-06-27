@@ -9,8 +9,8 @@
 :root {
     --bg-color: #181818;
     --text-color: #ffffff;
-    --a-color: grey;
-    --discord-color: rgb(146, 138, 255);
+    --a-color: rgb(193, 183, 255);
+    --discord-color: rgb(124, 114, 255);
     
 }
 body {
@@ -35,8 +35,10 @@ nav > ul {
 }
 nav > ul > li > a {
     text-decoration: none;
-    color: var(--a-color);
     font-size: 1.2rem;
+}
+a {
+    color: var(--a-color);
 }
 h1 {
     padding-left: 20px;
@@ -75,8 +77,8 @@ main > h1 {
 #discord {
     color: var(--discord-color);
 }
-img {
-    width: 30%;
+video, img {
+    width: 50%;
     display: block;
     margin: auto;
     padding-bottom: 20px;
