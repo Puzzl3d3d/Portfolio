@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Oliver">
+    <title>Pirate Game Picker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Pirate Game Picker</h1>
+    <div class="container">
+        <table>
+            <tbody id="squares">
+                <tr>
+                    <th>A1</th>
+                    <th>B1</th>
+                    <th>C1</th>
+                    <th>D1</th>
+                    <th>E1</th>
+                    <th>F1</th>
+                    <th>G1</th>
+                  </tr>
+                  <tr>
+                    <th>A2</th>
+                    <th>B2</th>
+                    <th>C2</th>
+                    <th>D2</th>
+                    <th>E2</th>
+                    <th>F2</th>
+                    <th>G2</th>
+                  </tr>
+                  <tr>
+                    <th>A3</th>
+                    <th>B3</th>
+                    <th>C3</th>
+                    <th>D3</th>
+                    <th>E3</th>
+                    <th>F3</th>
+                    <th>G3</th>
+                  </tr>
+                  <tr>
+                    <th>A4</th>
+                    <th>B4</th>
+                    <th>C4</th>
+                    <th>D4</th>
+                    <th>E4</th>
+                    <th>F4</th>
+                    <th>G4</th>
+                  </tr>
+                  <tr>
+                    <th>A5</th>
+                    <th>B5</th>
+                    <th>C5</th>
+                    <th>D5</th>
+                    <th>E5</th>
+                    <th>F5</th>
+                    <th>G5</th>
+                  </tr>
+                  <tr>
+                    <th>A6</th>
+                    <th>B6</th>
+                    <th>C6</th>
+                    <th>D6</th>
+                    <th>E6</th>
+                    <th>F6</th>
+                    <th>G6</th>
+                  </tr>
+                  <tr>
+                    <th>A7</th>
+                    <th>B7</th>
+                    <th>C7</th>
+                    <th>D7</th>
+                    <th>E7</th>
+                    <th>F7</th>
+                    <th>G7</th>
+                  </tr>
+            </tbody>
+          </table>
+          <div class="buttons">
+            <button id="generate" onclick="generate()">Generate Next Square</button>
+            <button id="choose" onclick="choose()">Choose Next Square</button>
+            <button id="back" onclick="undo()">Go back a square</button>
+            <h2>Last Square</h2>
+            <p id="last">No square selected yet</p>
+        </div>
+    </div>
+    <h2>Previous Squares:</h2>
+    <ol id="previous"></ol>
+  <script src="script.js"></script>
+</body>
+</html>
