@@ -136,6 +136,9 @@ pre {
         border-width: 1px;
 
         padding: 20px;
+
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .line {
