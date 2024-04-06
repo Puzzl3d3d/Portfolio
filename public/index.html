@@ -16,14 +16,14 @@
 </head>
 <body>
     <header>
-        <h1>Puzzled</h1>
+        <h1>Puzzled (@Puzzled3d)</h1>
         <nav>
             <ul>
                 <li><a id="aboutme" href="./">About Me</a></li>
                 <li><a id="experience" href="./Experience/">My Experience</a></li>
                 <li><a id="discord" href="https://discordapp.com/users/857638850766962760">Discord</a></li>
 				<li><a id="github" href="https://github.com/Puzzl3d3d">Github</a></li>
-				<li><a id="github" href="https://flask.puzzl3d.dev/">Flask Projects</a></li>
+				<!-- <li><a id="github" href="https://flask.puzzl3d.dev/">Flask Projects</a></li> -->
             </ul>
         </nav>
     </header>
@@ -38,291 +38,600 @@
         </h1>
 
         <p>
-            Nearing 3 years of Roblox Lua experience<br>
-			Over 4 years of Python experience<br>
+            Over 3 years of Roblox LuaU experience<br>
+			7 years of general programming experience<br>
             UK, GMT+0
         </p>
 
         <br>
 
-        <h1>Why me?</h1>
-
-        <p>I pride myself on my ability to get things done under restrictions.</p>
-        <p>I like to challenge and limit myself when developing every new project, so each time I can learn something new and grow my abilities. Examples are exploring a new game framework, making projects under a time limit (which I often do to maximise productivity)</p>
-
         <h1>Code Snippets</h1>
 
         <p>
-            This includes some of my code snippets of my recent projects. I like to keep my code organised and readable, and this is something I pride myself on.
+            This includes some of my code snippets of my recent projects. I like to keep my code organised and readable and structured.`
         </p>
 
         <br>
 
         <div class="code">
-            <pre class="language-lua">local function StartMove()
-    --// Starts a camera drag
-    
-    --// Starting Guard Clauses
-    if IsPinching then return end
-    if BuildMode() then return end
-    
-    --// Variables
-    local StartX, StartY
-    local PrevX, PrevY
-    local Ticks = 0
-    
-    --// Initialisation
-    if MoveConnection and MoveConnection.Connected then MoveConnection:Disconnect() end
-    
-    --// Bind Event
-    MoveConnection = Mouse.Move:Connect(function()
-        
-        --// Guard Clauses
-        if IsPinching then MoveConnection:Disconnect() return end
-        if BuildMode() then MoveConnection:Disconnect() return end
-        
-        if not StartX then
-            ---- Give the move a small delay, which solves mobile issue where mouse position randomly jumps when mouse down into move. Setting it back a few ticks fixes the issue
-            Ticks += 1
-            if Ticks < TICKS_BEFORE_MOVE then return end
-            
-            StartX, StartY = Mouse.X, Mouse.Y
-            PrevX, PrevY = Mouse.X, Mouse.Y
-            return
-        end
-        
-        -- Start Movement
-        Ticks = 0
-        MovePinchLock = true
+            <pre class="language-lua">--// Stat Profiler
+--//--// Module for Datastore management as a wrapper for ProfileService.
+--//--// Includes:
+--//--//--|| Automatic attribute management
+--//--//--|| Instant updates to profile
+--//--//--|| Easy way to structure datastore
 
-        local NewX, NewY = Mouse.X, Mouse.Y
-        
-        -- Don't do any further calculations
-        if NewX == PrevX and NewY == PrevY then return end
-        
-        -- Measure the distance that the mouse has moved
-        local DiffX, DiffY = PrevX - NewX, PrevY - NewY
-        local ScaledX, ScaledY = (DiffX / Camera.ViewportSize.X) * DRAG_SCALE, (DiffY / Camera.ViewportSize.Y) * DRAG_SCALE
-        
-        -- Fixes jitter from minute movements
-        if math.abs(ScaledX) > MAX_SCALED_SPEED or math.abs(ScaledY) > MAX_SCALED_SPEED then return end
-        
-        -- Guard Clauses
-        if IsPinching then MoveConnection:Disconnect() return end
-        if BuildMode() then MoveConnection:Disconnect() return end
-        
-        -- Calculate transformation 
-        DragOffset = DragOffset + Vector3.new(-(ScaledX * Camera.CFrame.LookVector.X) + (ScaledY * Camera.CFrame.LookVector.Y), 0, (ScaledY * Camera.CFrame.LookVector.Y) + (ScaledX * Camera.CFrame.LookVector.X))
-        PrevX, PrevY = NewX, NewY
-    end)
-end</pre>
+local StatProfiler = {}
+StatProfiler.Connections = {}
 
-            <pre class="language-lua">function PatchController:NewPatch(position, type)
-    -- Generate new patch at position `position` and type `type` 
-
-    -- Create mesh of patch
-    local part = script.Patch:Clone()
-    part.Name = type
-    part.Anchored = true
-    part:PivotTo(CFrame.new(position))
-    part.Size = self.PatchSize
-
-    -- Change mesh to match `type`
-    part.Mesh.Scale = Vector3.new(patchSize) * 3/4
-    
-    -- Configure patch for the LOD system and collection
-    part:SetAttribute("PATCH_INDEX", part:GetPivot().Position)
-    part:SetAttribute("HEALTH", self.Healths[part:GetPivot().Position])
-    
-    -- Add to the rendered patches cache
-    self.RenderedPatches[part:GetPivot().Position] = part
-    
-    part.Parent = workspace.Patches
-
-    return part
+--// Update profile with data. Adds to datastore if not already a stat.
+function StatProfiler.SetStat(player: Player, profile: any, stat: string, value: any): any
+	profile.Data[stat] = value
+	if typeof(value) ~= "table" then
+		player:SetAttribute(stat:gsub("/",""), value)
+	end
+	return value
 end
 
-function PatchController:Update()
-    -- LOD system. Only renders the patches close to the player. Any patches outside the `self.RenderDistance` will be ignored and will cut down client-side lag.
-    local Player = Players.LocalPlayer
+--// Loads a stat from the datastore. Like getting a stat, except it will create a profile entry if it doesn't already exist.
+function StatProfiler.LoadStat(player: Player, profile: any, stat: string, default: any?): any
+	local value = StatProfiler.GetStat(player, profile, stat, default)
+	if typeof(value) ~= "table" then
+		player:SetAttribute(stat:gsub("/",""), value)
+	end
+	
+	if not StatProfiler.Connections[player] then StatProfiler.Connections[player] = {} end
+	
+	table.insert(StatProfiler.Connections[player], player:GetAttributeChangedSignal(stat:gsub("/","")):Connect(function()
+		--print("updating stat", stat, "to", player:GetAttribute(stat:gsub("/","")))
+		StatProfiler.SetStat(player, profile, stat, player:GetAttribute(stat:gsub("/","")))
+	end))
+	
+	profile.Data[stat] = value -- added bc i forgor
+	
+	return value
+end
 
-    local Character = Player.Character if not Character then return end
-    local Position = Character:GetPivot().Position
-    local PersistentPatches = {}
+--// Increments a stat.
+function StatProfiler.IncrementStat(player: Player, profile: any, stat: string, increment: number, default: number?): (any, boolean)
+	local value, existed = StatProfiler.GetStat(player, profile, stat, default)
+	profile.Data[stat] = (value) + increment
+	if typeof(value) ~= "table" then
+		player:SetAttribute(stat:gsub("/",""), profile.Data[stat])
+	end
+	
+	if not StatProfiler.Connections[player] then StatProfiler.Connections[player] = {} end
+	
+	table.insert(StatProfiler.Connections[player], player:GetAttributeChangedSignal(stat:gsub("/","")):Connect(function()
+		StatProfiler.SetStat(player, profile, stat, player:GetAttribute(stat:gsub("/","")))
+	end))
+	return profile.Data[stat], existed
+end
 
-    -- Get all the currently rendered patches
-    for _,patch in pairs(workspace.Patches:GetChildren()) do
-        local _Position = patch:GetPivot().Position
-        if (_Position - Position).Magnitude > self.RenderDistance then
-            -- If it is outside the render distance, destroy it 
-            patch:Destroy()
-            self.RenderedPatches[_Position] = nil
-        else
-            -- Keep it.
-            table.insert(PersistentPatches, _Position)
-        end
-    end
-    
-    for _Position,Type in pairs(self.Patches) do
-        -- Render all of the new patches
+--// Returns the value for a stat or default (if given)
+function StatProfiler.GetStat(player: Player, profile: any, stat: string, default: any?): (any, boolean)
+	local existed = profile.Data[stat]
+	return existed or player:GetAttribute(stat:gsub("/","")) or default or 0, (not not existed)
+end
 
-        -- If it is already rendered or it is outside the render distance, do not render it.
-        if table.find(PersistentPatches, _Position) then continue end
-        if (_Position - Position).Magnitude > self.RenderDistance then continue end
-        
-        -- Create the patch
-        self:NewPatch(_Position, Type)
-    end
-end</pre>
+--// Creates a leaderstat value for a stat. Also creates the leaderstats folder if it doesn't already exist.
+function StatProfiler.CreateLeaderstat(player: Player, profile: any, stat: string, typeValue: string, default: any?): Instance
+	local value, _existed = StatProfiler.GetStat(player, profile, stat, default)
+	
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if not leaderstats then
+		leaderstats = Instance.new("Folder")
+		leaderstats.Name = "leaderstats"
+		leaderstats.Parent = player
+	end
+	
+	local statValue = Instance.new(typeValue)
+	statValue.Name = stat
+	statValue.Value = value
+	statValue.Parent = leaderstats
+	
+	statValue:GetPropertyChangedSignal("Value"):Connect(function()
+		StatProfiler.SetStat(player, profile, stat, statValue.Value)
+	end)
+	player:GetAttributeChangedSignal(stat:gsub("/","")):Connect(function()
+		statValue.Value = player:GetAttribute(stat:gsub("/",""))
+	end)
+	
+	return statValue
+end
+
+return StatProfiler
+</pre>
+
+            <pre class="language-lua">local CollectionService = game:GetService("CollectionService")
+				local Players = game:GetService("Players")
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local RunService = game:GetService("RunService")
+				local UserInputService = game:GetService("UserInputService")
+				local Packages = ReplicatedStorage.Packages
+				
+				local Knit = require(Packages.Knit)
+				local KeycodeImages = require(Packages.KeycodeImages)
+				
+				local Camera = workspace.CurrentCamera
+				
+				local InputController = Knit.CreateController {
+					Name = "InputController";
+				
+					CurrentInteractions = {1};
+					Interactions = {};
+					CurrentConnections = {};
+					MaxInteractUUID = 0;
+				}
+				
+				function InputController:KnitInit()
+				    self._InteractService = Knit.GetService("InteractService")
+				
+				    self.Player = Players.LocalPlayer
+				
+				    local InteractGUI = self.Player:WaitForChild("PlayerGui"):WaitForChild("Interact").Frame
+				    local InteractFrame = InteractGUI.Frame
+				    InteractFrame.Parent = script
+				
+				    InteractGUI.Parent.Enabled = true
+				    InteractGUI.Visible = true
+				
+				    RunService.Heartbeat:Connect(function(deltaTime)
+				        local CurrentInteractions = self:GetCurrentInteractions()
+				        for Keycode,InteractionData in pairs(CurrentInteractions) do
+				            if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
+				                self:RemoveInteract(InteractionData.UUID)
+				                continue
+				            end
+				
+				            local CurrentConnection = self.CurrentConnections[Keycode]
+				
+				            if CurrentConnection and CurrentConnection.UUID == Keycode then return end
+				            if CurrentConnection then
+				                CurrentConnection.InputBegan:Disconnect()
+				                CurrentConnection.Frame:Destroy()
+				                self.CurrentConnections[Keycode] = nil
+				            end
+				
+				            local Frame = InteractFrame:Clone()
+				
+				            local ConnectionData = {
+				                InputBegan = UserInputService.InputBegan:Connect(function(inputObject)
+				                    if inputObject.KeyCode == Keycode then
+				                        self:Interact(InteractionData.UUID)
+				                    end
+				                end);
+				                Frame = Frame;
+				                UUID = InteractionData.UUID;
+				            }
+				            self.CurrentConnections[Keycode] = ConnectionData
+				
+				            Frame.KeycodeImage.Image = "rbxassetid://"..tostring(KeycodeImages[Keycode] or KeycodeImages[Enum.KeyCode.Unknown] or 15664197440)
+				            Frame.InteractLabel.Text = InteractionData.Name
+				            Frame.Visible = not self.Player.Character:GetAttribute("IsInteracting")
+				            Frame.Parent = InteractGUI
+				
+				            InteractionData.RemoveEvent.Event:Once(function()
+				                ConnectionData.InputBegan:Disconnect()
+				                Frame:Destroy()
+				                self.CurrentConnections[Keycode] = nil
+				            end)
+				        end
+				    end)
+				
+				    -- Other interactions
+				    local ClimbInteraction
+				    local function HandleRope(Rope)
+				        local Collider = Rope:FindFirstChild("Collider")
+				        if not Collider then print(Rope,"has no collider") return end
+						
+				        Collider.Touched:Connect(function(otherPart)
+				            if ClimbInteraction then return end
+				            if otherPart.Name ~= "Head" then return end
+				            local Character = self.Player.Character
+				            if not Character then return end
+				            if not otherPart:IsDescendantOf(Character) then return end
+				
+				            ClimbInteraction = self:GetInteractionData(self:AddInteract(
+				                "Climb",
+				                Enum.KeyCode.Space,
+				                3,
+				                function(Collider, otherPart)
+				                    local collidingParts = Collider:GetTouchingParts()
+				                    if 
+				                        #collidingParts == 0 or
+				                        not table.find(collidingParts, otherPart) 
+				                    then 
+				                        return true 
+				                    end
+				                end,
+				                -- Args
+				                Collider,
+				                otherPart
+				            ))
+				
+				            ClimbInteraction.RemoveEvent.Event:Once(function()
+				                ClimbInteraction = nil
+				            end)
+				        end)
+				    end
+				    for _,Rope in pairs(workspace.Ropes:GetChildren()) do
+				        HandleRope(Rope)
+				    end
+				    workspace.Ropes.ChildAdded:Connect(HandleRope)
+				end
+				
+				function InputController:GetCurrentInteractions()
+					local AllInteractions = {};
+					for Key,InteractionData in pairs(self.Interactions) do
+						if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
+							self:RemoveInteract(InteractionData.UUID)
+							continue
+						end
+						AllInteractions[InteractionData.KeyCode] = AllInteractions[InteractionData.KeyCode] or {}
+						table.insert(AllInteractions[InteractionData.KeyCode], InteractionData)
+					end
+					local CurrentInteractions = {};
+					for KeyCode,Interactions in pairs(AllInteractions) do
+						local ThisInteraction
+						if #Interactions == 1 then
+							ThisInteraction = Interactions[1]
+						else
+							local HighestPriority = -1
+							for _,InteractionData in pairs(Interactions) do
+								if InteractionData.Priority >= HighestPriority then
+									HighestPriority = InteractionData.Priority
+									ThisInteraction = InteractionData
+								end
+							end
+						end
+						if not ThisInteraction then print("THERE IS NO",KeyCode,Interactions) continue end
+						CurrentInteractions[KeyCode] = ThisInteraction
+					end
+					return CurrentInteractions
+				end
+				function InputController:GetInteractionData(UUID)
+					for Key,InteractionData in pairs(self.Interactions) do
+						if InteractionData.UUID == UUID then
+							return InteractionData, Key
+						end
+					end
+				end
+				function InputController:AddInteract(Name, KeyCode, Priority, RemoveCondition, ...)
+					local InteractionData = {
+						Name = Name;
+						KeyCode = KeyCode;
+						Priority = Priority;
+						Args = {...};
+						UUID = self.MaxInteractUUID + 1;
+						RemoveCondition = RemoveCondition;
+						RemoveEvent = Instance.new("BindableEvent");
+					}
+					self.MaxInteractUUID += 1
+					table.insert(self.Interactions, InteractionData)
+					return InteractionData.UUID
+				end
+				function InputController:RemoveInteract(UUID)
+					local InteractionData,Key = self:GetInteractionData(UUID)
+					if not InteractionData or not Key then return end
+					self.Interactions[Key] = nil
+					local CurrentConnection = self.CurrentConnections[InteractionData.Keycode]
+					if CurrentConnection and CurrentConnection.UUID == UUID then
+						CurrentConnection.InputBegan:Disconnect()
+						CurrentConnection.Frame:Destroy()
+						self.CurrentConnections[InteractionData.Keycode] = nil
+					end
+					InteractionData.RemoveEvent:Fire()
+				end
+				function InputController:Interact(UUID)
+					if self.Player.Character:GetAttribute("IsInteracting") then return end
+					local InteractionData = self:GetInteractionData(UUID)
+					if not InteractionData then return end
+					local Name, Args = InteractionData.Name, InteractionData.Args
+				
+					self:RemoveInteract(UUID)
+				
+					self._InteractService:Interact(Name, unpack(Args))
+				end
+				
+				return InputController</pre>
             
         </div>
 
         <br><br>
 
         <div class="code">
-            <pre class="language-lua">function QuickDatastore._get(plr: number|Player|string, ds_key, default)
-	-- Gets the datastore value from a DataStore with a plr object|number|string `plr`, datastore key `ds_key` and default value `default`
-    
-    -- Get the player's key (string). E.g. "Player_66961502"
-    local playerKey = QuickDatastore._getPlayerKey(plr)
+            <pre class="language-lua">local module = {}
+local switch = {}
 
-	if not LastData[playerKey] then LastData[playerKey] = {} end
+switch.__index = switch
 
-    -- If the data was already grabbed and is updated, don't waste a call to DataStoreService
-	if LastData[playerKey][ds_key] then
-		return LastData[playerKey][ds_key]
-	end
-
-    -- Get the datastore object and the data
-	local datastore = DataStoreService:GetDataStore(ds_key)
-
-	local success, data = pcall(datastore.GetAsync, datastore, QuickDatastore._getPlayerKey(plr))
-
-	if not success then
-		warn("QuickDatastore | Error in Get function with key",ds_key,"and player",QuickDatastore._getPlr(plr),"|",data)
-		QuickDatastore.OnGetError(QuickDatastore._getPlr(plr), data, ds_key)
-
-		return
-	end
-
-    -- Returns the data from the datastore OR if it couldn't find it, the default data
-	return data or default
+module.__call = function(t, var): Switch
+	local switchObject = {}
+	
+	switchObject.var = var
+	
+	setmetatable(switchObject, switch)
+	
+	return switchObject
 end
-function QuickDatastore._set(ds_key, plr: number|Player, data)
-    -- Get the datastore object
-	local datastore = DataStoreService:GetDataStore(ds_key)
 
-    -- Get the player's key (string). E.g. "Player_66961502"
-	local playerKey = QuickDatastore._getPlayerKey(plr) 
+function switch:case(value: any, callback: ()->(), ...): Switch
+	if self.expired then return self end
+	if self.var == value then
+		self.returned = {callback(...)}
+		self.expired = true
+	end
+	return self
+end
+function switch:otherwise(callback: ()->(), ...): Switch-- Cannot use name "else" because it is a reserved keyword
+	if self.expired then return self end
+	self.returned = {callback(...)}
+	self.expired = true
+	return self
+end
 
-	if not LastData[playerKey] then LastData[playerKey] = {} end
+-- Aliases
+switch.other = switch.otherwise
+switch.except = switch.otherwise
+switch.unless = switch.otherwise
 
-	LastData[playerKey][ds_key] = data
+switch.match = switch.case
 
-    -- Call to DataStoreService to save the data
-	local success, err = pcall(datastore.SetAsync, datastore, playerKey, data)
+type case = (any, (any?)->(any?), any?) -> Switch
+type otherwise = ((any?)->(any?), any?) -> Switch
+export type Switch = {
+	case: case,
+	match: case,
+	
+	otherwise: otherwise,
+	other: otherwise,
+	except: otherwise,
+	unless: otherwise	
+}
 
-	if not success then
-		warn("QuickDatastore | Error in Set function with key",ds_key,"and player",QuickDatastore._getPlr(plr),"|",err)
-		QuickDatastore.OnSetError(QuickDatastore._getPlr(plr), err, ds_key)
+return setmetatable(module, module)</pre>
+
+			<pre class="language-lua">local HttpService = game:GetService("HttpService")
+local SequenceProvider = game:GetService("KeyframeSequenceProvider")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Packages = ReplicatedStorage.Packages
+
+local Knit = require(Packages.Knit)
+
+local AnimationService = Knit.CreateService {
+	Name = "AnimationService";
+	Client = {
+		StartAnim = Knit.CreateSignal();
+		ExecuteFunction = Knit.CreateSignal();
+	};
+}
+
+function AnimationService:KnitStart()
+	print("AnimationService Started!")
+end
+function AnimationService:KnitInit()
+	print("AnimationService Initialised!")
+
+	Players.PlayerAdded:Connect(function(player)
+		player.CharacterAdded:Connect(function(character)
+			local Humanoid = character:WaitForChild("Humanoid")
+			local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
+		end)
+	end)
+	for _,Enemy in pairs(workspace.Enemies:GetChildren()) do
+		local Humanoid = Enemy:WaitForChild("Humanoid")
+		local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
 	end
 
-    -- Return the result from the protected call (pcall)
-	return success
-end</pre>
+	self.LengthCache = {}
+end
 
-			<pre class="language-lua">function generate(Sections)
-	-- Generate a 2D level path
-	local StartingSections = CopyTable(Sections)
-	local startX = Choice({0, 1, 2, 3})
+function AnimationService:AddAnimationModel(Character, Mesh, ParentPart)
+	local Mesh = Mesh:Clone()
+	Mesh.Anchored = false
+	Mesh:PivotTo(ParentPart:GetPivot())
+	local Motor6D = Instance.new("Motor6D")
+	Motor6D.Part0 = ParentPart
+	Motor6D.Part1 = Mesh
+	Motor6D.C0 = Mesh:GetAttribute("C0") or CFrame.new(0,0,0)
+	Motor6D.C1 = Mesh:GetAttribute("C1") or CFrame.new(0,0,0)
+	Motor6D.Parent = Mesh
+	Mesh.Parent = Character
+	return Mesh
+end
+function AnimationService:LoadAnimation(Animator:Animator, AnimationId:string, Properties:{[string]:any})
+	Properties = Properties or {}
+
+	local Animation = Instance.new("Animation")
+	Animation.AnimationId = AnimationId
+	Animation.Parent = workspace
 	
-	-- Variables
-	local CurrentY = 0; -- Start on top
-	local CurrentX = startX; -- Starting point X
-
-	local NewDirection = 0; -- Which direction we're moving
-
-	while CurrentY < Constants.SECTIONS_X do
-		-- Free to generate a random move direction
-		if NewDirection == RANDOM then
-			NewDirection = Choice({LEFT,LEFT,RIGHT,RIGHT,DOWN});
-		end;
-
-		-- Attempt to move it left
-		if NewDirection == LEFT then
-			if CurrentX > 0 then
-				-- Free to move left.
-				CurrentX -= 1
-				Sections[CurrentX][CurrentY] = LR;
-				NewDirection = Choice({LEFT,LEFT,LEFT,DOWN});
-			else
-				-- Need to move down
-				if CurrentY < Constants.SECTIONS_Y-1 then
-					Sections[CurrentX][CurrentY] = LBR;
-					CurrentY += 1;
-					Sections[CurrentX][CurrentY] = LTR;
-					NewDirection = RIGHT;
-				else
-					CurrentY += 1 -- Exit loop
-				end
-			end
-		-- Attempt to move it right
-		elseif NewDirection == RIGHT then
-			if CurrentX < Constants.SECTIONS_X-1 then
-				-- Free to move right
-				CurrentX += 1
-				Sections[CurrentX][CurrentY] = LR;
-				NewDirection = Choice({RIGHT,RIGHT,RIGHT,DOWN});
-			else
-				-- Need to move down
-				if CurrentY < Constants.SECTIONS_Y-1 then
-					Sections[CurrentX][CurrentY] = LBR;
-					CurrentY += 1;
-					Sections[CurrentX][CurrentY] = LTR;
-					NewDirection = LEFT;
-				else
-					CurrentY += 1 -- Exit loop
-				end
-			end
-		else
-			-- Move down
-			
-			if CurrentY < Constants.SECTIONS_Y-1 then
-				-- TODO Add extra levels for going down twice
-				
-				Sections[CurrentX][CurrentY] = 2;
-				CurrentY += 1;
-				Sections[CurrentX][CurrentY] = 3;
-				NewDirection = 0;
-				
-				if CurrentX == Constants.SECTIONS_X-1 then
-					NewDirection = LEFT--Choice({LEFT, LEFT, DOWN})	-- Old code for potentially going down twice
-				elseif CurrentX == 0 then
-					NewDirection = RIGHT--Choice({RIGHT, RIGHT, DOWN})		-- Old code for potentially going down twice
-				end
-			else
-				CurrentY += 1 -- Exit loop
-			end
-		end;
-	end
-	
-	-- Check if the generated level meets a standard. Otherwise, regenerate.
-	local totalLevelNums = {}
-	for y=0, Constants.SECTIONS_Y-1 do
-		for x=0, Constants.SECTIONS_X-1 do
-			local levelType = totalLevelNums[Sections[x][y]]
-			totalLevelNums[Sections[x][y]] = if levelType then levelType+1 else 1
+	local AnimTrack = Animator:LoadAnimation(Animation)
+	for Property, Value in pairs(Properties) do
+		local Success, Error = pcall(function()
+			AnimTrack[Property] = Value
+		end)
+		if not Success then
+			warn("AnimTrack has no property", Property,"| Attempted to set to",Value)
 		end
 	end
-	if (totalLevelNums[RANDOM] and totalLevelNums[RANDOM] > 8) or (not totalLevelNums[LR] or totalLevelNums[LR] < 4) or (not totalLevelNums[LTR] or totalLevelNums[LBR] > totalLevelNums[LTR]+1) then
-		return generate(StartingSections)
-	end
+
+	return AnimTrack, Animation
+end
+function AnimationService:AnimateModel(Model:Model, AnimationId:string, Properties:{[string]:any})
+	Properties = Properties or {}
+
+	local AnimController = Model:FindFirstChildOfClass("AnimationController") -- Ironically also the name of the module lol
+	if not AnimController then warn(Model,"has no AnimationController") return end
+	local Animator = AnimController:FindFirstChildOfClass("Animator")
+	if not Animator then warn(Model,">",AnimController,"has no Animator") return end
+
+	local AnimTrack, Animation = self:LoadAnimation(Animator, AnimationId, Properties)
+
+	AnimTrack:Play()
+	return AnimTrack, Animation
+end
+function AnimationService:AnimateHumanoid(Character:Model, AnimationId:string, Properties:{[string]:any})
+	Properties = Properties or {}
 	
-	-- Return all the generated information
-	-- StartX = X Position of the start of the level
-	-- CurrentX = X Position of the end of the level
-	return Sections, startX, CurrentX
-end</pre>
+	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if not Humanoid then warn(Character,"is not a Humanoid, attempting to animate as a Model") return self:AnimateModel(Character, AnimationId, Properties) end
+	local Animator = Humanoid:FindFirstChildOfClass("Animator")
+	if not Animator then warn(Character,">",Humanoid,"has no Animator") return end
+	
+	local AnimTrack, Animation = self:LoadAnimation(Animator, AnimationId, Properties)
+	
+	AnimTrack:Play()
+	return AnimTrack, Animation
+end
+function AnimationService:GetAnimLength(AnimTrack, Timeout)
+	local ID = AnimTrack.Animation.AnimationId
+	local Length = self.LengthCache[ID]
+	if not Length or Length == 0 then
+		Timeout = Timeout or 1
+		local Begin = os.clock()
+		repeat
+			Length = AnimTrack.Length
+			task.wait()
+		until Length ~= 0 or (os.clock() - Begin) >= Timeout
+	end
+	if Length ~= 0 then
+		self.LengthCache[ID] = Length
+	end
+	return Length
+end
+function AnimationService:GetAnimMarkers(ID: string): {string?}
+	local Markers = {}
+	local KeyframeSequence: KeyframeSequence = SequenceProvider:GetKeyframeSequenceAsync(ID)
+	local function Recurse(Parent)
+		for _, Child in pairs(Parent:GetChildren()) do
+			if (Child:IsA("KeyframeMarker")) then
+				table.insert(Markers, Child)
+			end
+			if (#Child:GetChildren() > 0) then
+				Recurse(Child)
+			end
+		end
+	end
+	Recurse(KeyframeSequence)
+
+	return Markers
+end
+function AnimationService:Animate(...)
+	local LongestLength = 0
+
+	self:LockCamera()
+
+	for _,AnimData:AnimData in pairs({...}) do
+		local Model, ID, Properties, MarkerData = AnimData.Model, AnimData.ID, AnimData.Properties or {}, AnimData.MarkerData or {}
+		local AnimTrack, Animation
+
+		local Humanoid = Model:FindFirstChildOfClass("Humanoid")
+		if Humanoid then
+			AnimTrack, Animation = self:AnimateHumanoid(Model, ID, Properties)
+		else
+			AnimTrack, Animation = self:AnimateModel(Model, ID, Properties)
+		end
+		
+		local Length = self:GetAnimLength(AnimTrack, 0.5)
+		if Length == 0 then Length = 1 end
+		if Length > LongestLength then
+			LongestLength = Length
+		end
+
+		local MarkerConnections = {}
+		local Markers = self:GetAnimMarkers(ID)
+
+		local Sounds = Model:FindFirstChild("Sounds", true) or Instance.new("Folder")
+		local Particles = Model:FindFirstChild("Particles", true) or Instance.new("Folder")
+
+		for _,Sound in pairs(Sounds:GetChildren()) do
+			if Sound.Name ~= "Start" then continue end
+			if not Sound:IsA("Sound") then continue end
+
+			Sound:Play()
+		end
+		for _,Emitter in pairs(Particles:GetChildren()) do
+			if Emitter.Name ~= "Start" then continue end
+			if not Emitter:IsA("ParticleEmitter") then continue end
+
+			Emitter.Enabled = true
+			task.delay(Emitter:GetAttribute("Length") or (Emitter:FindFirstChild("Length") and Emitter:FindFirstChild("Length").Value) or 1, function()
+				Emitter.Enabled = false
+			end)
+		end
+
+		for _,Marker in pairs(Markers) do
+			Marker = Marker.Name
+			table.insert(MarkerConnections, AnimTrack:GetMarkerReachedSignal(Marker):Connect(function(paramString)
+				local Length = tonumber(paramString)
+				if MarkerData[Marker] then
+					MarkerData[Marker].Payload(Model, ID, Properties, MarkerData, Length)
+					if not MarkerData[Marker].Continue then return end
+				end
+				for _,Sound in pairs(Sounds:GetChildren()) do
+					if Sound.Name ~= Marker then continue end
+					if not Sound:IsA("Sound") then continue end
+
+					Sound:Play()
+				end
+				for _,Emitter in pairs(Particles:GetChildren()) do
+					if Emitter.Name ~= Marker then continue end
+					if not Emitter:IsA("ParticleEmitter") then continue end
+
+					Emitter.Enabled = true
+					task.delay(Length or Emitter:GetAttribute("Length") or (Emitter:FindFirstChild("Length") and Emitter:FindFirstChild("Length").Value) or 1, function()
+						Emitter.Enabled = false
+					end)
+				end
+			end))
+		end
+
+		AnimTrack:Play()
+
+		AnimTrack.Stopped:Once(function()
+			Animation:Destroy()
+			for _, Connection in pairs(MarkerConnections) do
+				if Connection and Connection.Connected then
+					Connection:Disconnect()
+				end
+			end
+		end)
+	end
+
+	self:UnlockCamera()
+
+	return LongestLength
+end
+
+function AnimationService:ClientExecute(Player, FunctionName, ...)
+	local CallbackEvent = Instance.new("RemoteEvent", workspace)
+	self.Client.ExecuteFunction:Fire(Player, CallbackEvent, FunctionName, ...)
+	local ReturnValues = {CallbackEvent.OnServerEvent:Wait()}
+	table.remove(ReturnValues, 1)
+	CallbackEvent:Destroy()
+	return unpack(ReturnValues)
+end
+
+function AnimationService:AnimatePlayer(TargetPlayer:Player, PlayerData:AnimData, GlobalData:AnimData)
+	-- Player Data is the animations played locally, GlobalData is the animation played to other clients
+	GlobalData = GlobalData or PlayerData
+
+	local LongestLength = 0
+	for _, Player in pairs(Players:GetChildren()) do
+		local Length = self:ClientExecute(Player, "Animate", unpack(if Player==TargetPlayer then PlayerData else GlobalData))
+		if Length > LongestLength then
+			LongestLength = Length
+		end
+	end
+	return LongestLength
+end
+
+export type AnimData = {ID:string,Model:Model,Properties:{[any]:any},MarkerData:{[string]:{Payload:(Model,string,{[any]:any},table,number)->{},Continue:boolean}}}
+
+return AnimationService</pre>
         </div>
 
         <br>
