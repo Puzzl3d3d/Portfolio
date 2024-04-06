@@ -144,197 +144,197 @@ return StatProfiler
 </pre>
 
             <pre class="language-lua">local CollectionService = game:GetService("CollectionService")
-				local Players = game:GetService("Players")
-				local ReplicatedStorage = game:GetService("ReplicatedStorage")
-				local RunService = game:GetService("RunService")
-				local UserInputService = game:GetService("UserInputService")
-				local Packages = ReplicatedStorage.Packages
-				
-				local Knit = require(Packages.Knit)
-				local KeycodeImages = require(Packages.KeycodeImages)
-				
-				local Camera = workspace.CurrentCamera
-				
-				local InputController = Knit.CreateController {
-					Name = "InputController";
-				
-					CurrentInteractions = {1};
-					Interactions = {};
-					CurrentConnections = {};
-					MaxInteractUUID = 0;
-				}
-				
-				function InputController:KnitInit()
-				    self._InteractService = Knit.GetService("InteractService")
-				
-				    self.Player = Players.LocalPlayer
-				
-				    local InteractGUI = self.Player:WaitForChild("PlayerGui"):WaitForChild("Interact").Frame
-				    local InteractFrame = InteractGUI.Frame
-				    InteractFrame.Parent = script
-				
-				    InteractGUI.Parent.Enabled = true
-				    InteractGUI.Visible = true
-				
-				    RunService.Heartbeat:Connect(function(deltaTime)
-				        local CurrentInteractions = self:GetCurrentInteractions()
-				        for Keycode,InteractionData in pairs(CurrentInteractions) do
-				            if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
-				                self:RemoveInteract(InteractionData.UUID)
-				                continue
-				            end
-				
-				            local CurrentConnection = self.CurrentConnections[Keycode]
-				
-				            if CurrentConnection and CurrentConnection.UUID == Keycode then return end
-				            if CurrentConnection then
-				                CurrentConnection.InputBegan:Disconnect()
-				                CurrentConnection.Frame:Destroy()
-				                self.CurrentConnections[Keycode] = nil
-				            end
-				
-				            local Frame = InteractFrame:Clone()
-				
-				            local ConnectionData = {
-				                InputBegan = UserInputService.InputBegan:Connect(function(inputObject)
-				                    if inputObject.KeyCode == Keycode then
-				                        self:Interact(InteractionData.UUID)
-				                    end
-				                end);
-				                Frame = Frame;
-				                UUID = InteractionData.UUID;
-				            }
-				            self.CurrentConnections[Keycode] = ConnectionData
-				
-				            Frame.KeycodeImage.Image = "rbxassetid://"..tostring(KeycodeImages[Keycode] or KeycodeImages[Enum.KeyCode.Unknown] or 15664197440)
-				            Frame.InteractLabel.Text = InteractionData.Name
-				            Frame.Visible = not self.Player.Character:GetAttribute("IsInteracting")
-				            Frame.Parent = InteractGUI
-				
-				            InteractionData.RemoveEvent.Event:Once(function()
-				                ConnectionData.InputBegan:Disconnect()
-				                Frame:Destroy()
-				                self.CurrentConnections[Keycode] = nil
-				            end)
-				        end
-				    end)
-				
-				    -- Other interactions
-				    local ClimbInteraction
-				    local function HandleRope(Rope)
-				        local Collider = Rope:FindFirstChild("Collider")
-				        if not Collider then print(Rope,"has no collider") return end
-						
-				        Collider.Touched:Connect(function(otherPart)
-				            if ClimbInteraction then return end
-				            if otherPart.Name ~= "Head" then return end
-				            local Character = self.Player.Character
-				            if not Character then return end
-				            if not otherPart:IsDescendantOf(Character) then return end
-				
-				            ClimbInteraction = self:GetInteractionData(self:AddInteract(
-				                "Climb",
-				                Enum.KeyCode.Space,
-				                3,
-				                function(Collider, otherPart)
-				                    local collidingParts = Collider:GetTouchingParts()
-				                    if 
-				                        #collidingParts == 0 or
-				                        not table.find(collidingParts, otherPart) 
-				                    then 
-				                        return true 
-				                    end
-				                end,
-				                -- Args
-				                Collider,
-				                otherPart
-				            ))
-				
-				            ClimbInteraction.RemoveEvent.Event:Once(function()
-				                ClimbInteraction = nil
-				            end)
-				        end)
-				    end
-				    for _,Rope in pairs(workspace.Ropes:GetChildren()) do
-				        HandleRope(Rope)
-				    end
-				    workspace.Ropes.ChildAdded:Connect(HandleRope)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Packages = ReplicatedStorage.Packages
+
+local Knit = require(Packages.Knit)
+local KeycodeImages = require(Packages.KeycodeImages)
+
+local Camera = workspace.CurrentCamera
+
+local InputController = Knit.CreateController {
+	Name = "InputController";
+
+	CurrentInteractions = {1};
+	Interactions = {};
+	CurrentConnections = {};
+	MaxInteractUUID = 0;
+}
+
+function InputController:KnitInit()
+    self._InteractService = Knit.GetService("InteractService")
+
+    self.Player = Players.LocalPlayer
+
+    local InteractGUI = self.Player:WaitForChild("PlayerGui"):WaitForChild("Interact").Frame
+    local InteractFrame = InteractGUI.Frame
+    InteractFrame.Parent = script
+
+    InteractGUI.Parent.Enabled = true
+    InteractGUI.Visible = true
+
+    RunService.Heartbeat:Connect(function(deltaTime)
+        local CurrentInteractions = self:GetCurrentInteractions()
+        for Keycode,InteractionData in pairs(CurrentInteractions) do
+            if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
+                self:RemoveInteract(InteractionData.UUID)
+                continue
+            end
+
+            local CurrentConnection = self.CurrentConnections[Keycode]
+
+            if CurrentConnection and CurrentConnection.UUID == Keycode then return end
+            if CurrentConnection then
+                CurrentConnection.InputBegan:Disconnect()
+                CurrentConnection.Frame:Destroy()
+                self.CurrentConnections[Keycode] = nil
+            end
+
+            local Frame = InteractFrame:Clone()
+
+            local ConnectionData = {
+                InputBegan = UserInputService.InputBegan:Connect(function(inputObject)
+                    if inputObject.KeyCode == Keycode then
+                        self:Interact(InteractionData.UUID)
+                    end
+                end);
+                Frame = Frame;
+                UUID = InteractionData.UUID;
+            }
+            self.CurrentConnections[Keycode] = ConnectionData
+
+            Frame.KeycodeImage.Image = "rbxassetid://"..tostring(KeycodeImages[Keycode] or KeycodeImages[Enum.KeyCode.Unknown] or 15664197440)
+            Frame.InteractLabel.Text = InteractionData.Name
+            Frame.Visible = not self.Player.Character:GetAttribute("IsInteracting")
+            Frame.Parent = InteractGUI
+
+            InteractionData.RemoveEvent.Event:Once(function()
+                ConnectionData.InputBegan:Disconnect()
+                Frame:Destroy()
+                self.CurrentConnections[Keycode] = nil
+            end)
+        end
+    end)
+
+    -- Other interactions
+    local ClimbInteraction
+    local function HandleRope(Rope)
+        local Collider = Rope:FindFirstChild("Collider")
+        if not Collider then print(Rope,"has no collider") return end
+		
+        Collider.Touched:Connect(function(otherPart)
+            if ClimbInteraction then return end
+            if otherPart.Name ~= "Head" then return end
+            local Character = self.Player.Character
+            if not Character then return end
+            if not otherPart:IsDescendantOf(Character) then return end
+
+            ClimbInteraction = self:GetInteractionData(self:AddInteract(
+                "Climb",
+                Enum.KeyCode.Space,
+                3,
+                function(Collider, otherPart)
+                    local collidingParts = Collider:GetTouchingParts()
+                    if 
+                        #collidingParts == 0 or
+                        not table.find(collidingParts, otherPart) 
+                    then 
+                        return true 
+                    end
+                end,
+                -- Args
+                Collider,
+                otherPart
+            ))
+
+            ClimbInteraction.RemoveEvent.Event:Once(function()
+                ClimbInteraction = nil
+            end)
+        end)
+    end
+    for _,Rope in pairs(workspace.Ropes:GetChildren()) do
+        HandleRope(Rope)
+    end
+    workspace.Ropes.ChildAdded:Connect(HandleRope)
+end
+
+function InputController:GetCurrentInteractions()
+	local AllInteractions = {};
+	for Key,InteractionData in pairs(self.Interactions) do
+		if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
+			self:RemoveInteract(InteractionData.UUID)
+			continue
+		end
+		AllInteractions[InteractionData.KeyCode] = AllInteractions[InteractionData.KeyCode] or {}
+		table.insert(AllInteractions[InteractionData.KeyCode], InteractionData)
+	end
+	local CurrentInteractions = {};
+	for KeyCode,Interactions in pairs(AllInteractions) do
+		local ThisInteraction
+		if #Interactions == 1 then
+			ThisInteraction = Interactions[1]
+		else
+			local HighestPriority = -1
+			for _,InteractionData in pairs(Interactions) do
+				if InteractionData.Priority >= HighestPriority then
+					HighestPriority = InteractionData.Priority
+					ThisInteraction = InteractionData
 				end
-				
-				function InputController:GetCurrentInteractions()
-					local AllInteractions = {};
-					for Key,InteractionData in pairs(self.Interactions) do
-						if InteractionData.RemoveCondition(unpack(InteractionData.Args)) then
-							self:RemoveInteract(InteractionData.UUID)
-							continue
-						end
-						AllInteractions[InteractionData.KeyCode] = AllInteractions[InteractionData.KeyCode] or {}
-						table.insert(AllInteractions[InteractionData.KeyCode], InteractionData)
-					end
-					local CurrentInteractions = {};
-					for KeyCode,Interactions in pairs(AllInteractions) do
-						local ThisInteraction
-						if #Interactions == 1 then
-							ThisInteraction = Interactions[1]
-						else
-							local HighestPriority = -1
-							for _,InteractionData in pairs(Interactions) do
-								if InteractionData.Priority >= HighestPriority then
-									HighestPriority = InteractionData.Priority
-									ThisInteraction = InteractionData
-								end
-							end
-						end
-						if not ThisInteraction then print("THERE IS NO",KeyCode,Interactions) continue end
-						CurrentInteractions[KeyCode] = ThisInteraction
-					end
-					return CurrentInteractions
-				end
-				function InputController:GetInteractionData(UUID)
-					for Key,InteractionData in pairs(self.Interactions) do
-						if InteractionData.UUID == UUID then
-							return InteractionData, Key
-						end
-					end
-				end
-				function InputController:AddInteract(Name, KeyCode, Priority, RemoveCondition, ...)
-					local InteractionData = {
-						Name = Name;
-						KeyCode = KeyCode;
-						Priority = Priority;
-						Args = {...};
-						UUID = self.MaxInteractUUID + 1;
-						RemoveCondition = RemoveCondition;
-						RemoveEvent = Instance.new("BindableEvent");
-					}
-					self.MaxInteractUUID += 1
-					table.insert(self.Interactions, InteractionData)
-					return InteractionData.UUID
-				end
-				function InputController:RemoveInteract(UUID)
-					local InteractionData,Key = self:GetInteractionData(UUID)
-					if not InteractionData or not Key then return end
-					self.Interactions[Key] = nil
-					local CurrentConnection = self.CurrentConnections[InteractionData.Keycode]
-					if CurrentConnection and CurrentConnection.UUID == UUID then
-						CurrentConnection.InputBegan:Disconnect()
-						CurrentConnection.Frame:Destroy()
-						self.CurrentConnections[InteractionData.Keycode] = nil
-					end
-					InteractionData.RemoveEvent:Fire()
-				end
-				function InputController:Interact(UUID)
-					if self.Player.Character:GetAttribute("IsInteracting") then return end
-					local InteractionData = self:GetInteractionData(UUID)
-					if not InteractionData then return end
-					local Name, Args = InteractionData.Name, InteractionData.Args
-				
-					self:RemoveInteract(UUID)
-				
-					self._InteractService:Interact(Name, unpack(Args))
-				end
-				
-				return InputController</pre>
+			end
+		end
+		if not ThisInteraction then print("THERE IS NO",KeyCode,Interactions) continue end
+		CurrentInteractions[KeyCode] = ThisInteraction
+	end
+	return CurrentInteractions
+end
+function InputController:GetInteractionData(UUID)
+	for Key,InteractionData in pairs(self.Interactions) do
+		if InteractionData.UUID == UUID then
+			return InteractionData, Key
+		end
+	end
+end
+function InputController:AddInteract(Name, KeyCode, Priority, RemoveCondition, ...)
+	local InteractionData = {
+		Name = Name;
+		KeyCode = KeyCode;
+		Priority = Priority;
+		Args = {...};
+		UUID = self.MaxInteractUUID + 1;
+		RemoveCondition = RemoveCondition;
+		RemoveEvent = Instance.new("BindableEvent");
+	}
+	self.MaxInteractUUID += 1
+	table.insert(self.Interactions, InteractionData)
+	return InteractionData.UUID
+end
+function InputController:RemoveInteract(UUID)
+	local InteractionData,Key = self:GetInteractionData(UUID)
+	if not InteractionData or not Key then return end
+	self.Interactions[Key] = nil
+	local CurrentConnection = self.CurrentConnections[InteractionData.Keycode]
+	if CurrentConnection and CurrentConnection.UUID == UUID then
+		CurrentConnection.InputBegan:Disconnect()
+		CurrentConnection.Frame:Destroy()
+		self.CurrentConnections[InteractionData.Keycode] = nil
+	end
+	InteractionData.RemoveEvent:Fire()
+end
+function InputController:Interact(UUID)
+	if self.Player.Character:GetAttribute("IsInteracting") then return end
+	local InteractionData = self:GetInteractionData(UUID)
+	if not InteractionData then return end
+	local Name, Args = InteractionData.Name, InteractionData.Args
+
+	self:RemoveInteract(UUID)
+
+	self._InteractService:Interact(Name, unpack(Args))
+end
+
+return InputController</pre>
             
         </div>
 
