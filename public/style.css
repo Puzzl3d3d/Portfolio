@@ -1,49 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
 * {
     margin: 0;
-    font-family: 'Courier New', Courier, monospace;
-    color: #ffffff;
+    font-family: "Roboto";
+    color: var(--text-color);
 
     user-select: none;
     -webkit-user-drag: none;
 }
 :root {
-    --bg-color: #181818;
-    --text-color: #ffffff;
-    --a-color: rgb(193, 183, 255);
-    --discord-color: rgb(124, 114, 255);
-    
+    --bg-color: #f1f1f1;
+    --text-color: rgb(0, 0, 0);
+    --a-color: rgb(0, 0, 0);
+    --discord-color: rgb(0, 0, 0);
 }
+.background-image {
+    display: none;
+}
+
 body {
     overflow-x: hidden;
+    overflow-y: scroll;
     background-color: var(--bg-color);
 }
 
 /* Header and Nav bar */
-header {
+.header {
     background-color: var(--bg-color);
     height: 55%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 nav {
     position: sticky;
     top: 0;
+    width: 100%;
+    padding: 0;
 }
 nav > ul {
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    padding-bottom: 20px;
+    padding: 0;
+    list-style: none;
+}
+nav > ul > li {
+    width: 20%;
+    height: 100px;
+
+    padding-left: 10px;
+    padding-right: 10px;
 }
 nav > ul > li > a {
     text-decoration: none;
-    font-size: 1.2rem;
+    font-size: 1.3em;
+
+    border-radius: 16px;
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+
+    height: 100%;
+    width: 100%;
+
+    padding: 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow: 0px 2px 20px 3px #686868;
 }
 a {
     color: var(--a-color);
+    display: flex;
+
+    height: 100%;
 }
 h1 {
-    padding-left: 20px;
-    padding-top: 15px;
-    padding-bottom: 15px;
+    padding-top: 35px;
+    padding-bottom: 25px;
+
+    text-align: center;
+}
+.header {
+    padding-bottom: 30px;
 }
 
 /* Main */
@@ -57,11 +102,24 @@ main {
     border-top: rgb(41, 41, 41) solid;
     border-bottom: rgb(41, 41, 41) solid;
     border-width: 2px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 h2 {
     padding: 20px 15px 20px 15px;
     font-size: 1.2rem;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+h2 > a {
+    margin: 0;
+    margin-left: 5px;
 }
 main > h1 {
     text-align: center;
@@ -74,25 +132,47 @@ main > h1 {
     margin-bottom: 10px;
     margin-top: 20px;
 }
-#discord {
-    color: var(--discord-color);
+.discord > img {
+    width: 100px;
+    height: 100px;
+}
+.github > img {
+    width: 170px;
+    height: 100px;
 }
 video, img {
-    width: 50%;
+    width: 30%;
     display: block;
-    margin: auto;
-    padding-bottom: 20px;
 }
 p {
     text-align: center;
-    padding-left: 20px;
     padding-right: 20px;
+}
+ul {
+    display: block
+}
+li {
+    font-size: 1.5em;
+    padding-bottom: 15px;
+    padding-top: 5px;
+    font-family: "Roboto";
+}
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+pre > * {
+    font-family: 'Courier New', Courier, monospace;
 }
 
 /* Footer */
 footer {
     background-color: var(--bg-color);
     height: 100px;
+    width: 100%;
     margin: none;
     padding: none;
 
@@ -116,49 +196,109 @@ pre {
 }
 .code {
     display: flex;
+    width: 100%;
     flex-direction: row;
     justify-content: space-around;
+    padding-bottom: 20px;
 }
 
 /* Sizes */
 @media (min-width: 1080px) {
     /* Desktop */
 
-    .block {
+    /* .block {
         display: flex;
+    } */
+
+    .background-image {
+        width: 100vw;
+        height: 100vh;
+        position: sticky;
+        display:flex;
+        top: 0;
+        margin: auto;
+        margin-top: -100vh;
+        margin-bottom: 0;
+        background-image: url(./background.jpeg);
+        background-repeat:no-repeat;
+        background-size: cover;
+        /* background-size: 20px; */
+        background-color: #e0e0e0;
+    
+        z-index: -1;
+    
+        filter:blur(10px)
     }
+
+    main {
+        border-color: black;
+        border-width: 1px;
+        border-style: solid;
+        padding-left: 30px;
+        padding-right: 30px;
+    
+        width: 50%;
+        margin: auto;
+        height: 100%;
+    
+        box-shadow: 0px 3px 10px 5px #686868;
+    }
+
     .project {
         display: block;
-        width: 50%;
+        width: 80%;
 
-        border-color: var(--text-color);
+        /* border-color: var(--text-color);
         border-style: solid;
-        border-width: 1px;
+        border-width: 1px; */
 
         padding: 20px;
 
         margin-left: auto;
         margin-right: auto;
+
+        margin-bottom: 30px;
+        
+        /* transition: all 0.5s; */
     }
 
-    .line {
-        display: none;
-    }
+
+    /* .project:hover {
+        width: calc(47% + 20px); 
+        border-width: 2px; 
+        padding-bottom: 40px;
+    } */
 
     nav > ul > li > a {
-        font-size: 3rem;
+        font-size: 1.5rem;
     }
     nav > ul {
         list-style: none;
     }
 
-    h1 {
-        font-size: 2.5rem;
-    }
     h2 {
-        font-size: 2rem;
+        font-size: 2em;
+        padding-bottom: 20px;
     }
+    h2 > a {
+        margin-left:10px
+    }
+    img {
+        aspect-ratio: 1/1;
+        width: 250px;
+        height: 250px;
+    }
+
 }
+
+
+
+
+
+
+
+
+
 /* Code blocks (PrismJS) */
 /* PrismJS 1.29.0
 https://prismjs.com/download.html#themes=prism-okaidia&languages=lua&plugins=line-numbers */
